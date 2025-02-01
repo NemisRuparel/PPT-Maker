@@ -332,7 +332,7 @@ const NameInputScreen = ({ onFinish, isDarkTheme, fontSize, setUsername }) => {
   );
 };
 
-// Updated Home Screen with Username Greeting
+// Updated Home Screen with Time-Based Greeting
 const HomeScreen = ({ navigation, isDarkTheme, fontSize, username }) => {
   const styles = getDynamicStyles(isDarkTheme, fontSize);
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -345,21 +345,42 @@ const HomeScreen = ({ navigation, isDarkTheme, fontSize, username }) => {
     ]).start();
   }, []);
 
+  // Function to determine greeting based on specified time ranges
+  const getTimeBasedGreeting = () => {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    if (currentHour >= 6 && currentHour < 12) {
+      return "Good Morning";
+    } else if (currentHour === 12 && currentMinute === 0) {
+      return "Good Noon";
+    } else if (currentHour >= 12 && currentHour < 18) {
+      return "Good Afternoon";
+    } else if (currentHour >= 18 && currentHour <= 21) {
+      return "Good Evening";
+    } else {
+      return "Hello"; // Default for times outside 6 AM - 9 PM (e.g., night)
+    }
+  };
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container}>
         <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
           <View style={{ alignItems: "center", marginTop: SPACING * 2.5 }}>
-           <Text style={[styles.title,{marginRight:170,marginTop:-30,marginBottom:50,fontSize:45,color: isDarkTheme ? "#ffffff" : "#000000"}]}>ѕℓι∂єѕηαρ</Text>
-            <Text style={[styles.title, { marginTop: -20, marginBottom: 2, fontSize:25,marginRight:250,width:200}]}>
-              Hello, {username}!
+            <Text style={[styles.title, { marginRight: 170, marginTop: -30, marginBottom: 50, fontSize: 45, color: isDarkTheme ? "#ffffff" : "#000000" }]}>
+              ѕℓι∂єѕηαρ
             </Text>
-            <Text style={[styles.subtitle, { fontSize: 16,marginRight:20 }]}>
+            <Text style={[styles.title, { marginTop: -20, marginBottom: 2, fontSize: 25,textAlign:'left',marginLeft:-100,width: 300 }]}>
+              {getTimeBasedGreeting()}, {username}!
+            </Text>
+            <Text style={[styles.subtitle, { fontSize: 15, marginRight: 60 }]}>
               Forgot to make PPTs? No worry, we are here..! 😊
             </Text>
           </View>
           <View>
-          <Image source={require('./assets/1.png')} style={{ width: 300, height: 300,marginLeft:50 }} />
+            <Image source={require('./assets/1.png')} style={{ width: 300, height: 300, marginLeft: 50 }} />
             <View style={styles.banner}>
               <Text style={styles.bannerText}>Present with Power</Text>
               <TouchableOpacity
@@ -561,7 +582,7 @@ const FAQsScreen = ({ isDarkTheme, fontSize }) => {
         {faqs.map((faq, index) => (
           <View key={index} style={styles.card}>
             <Text style={styles.featureTitle}>{faq.question}</Text>
-            <Text style={styles.featureText}>{faq.answer}</Text>
+            <Text style={[styles.featureText, { fontWeight: 400 }]}>{faq.answer}</Text>
           </View>
         ))}
       </ScrollView>
