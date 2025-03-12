@@ -1,25 +1,29 @@
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
-const Intro = ({navigation}) => {
+const Intro = ({ navigation }) => {
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>SlideSnap</Text>
+      
       <Text style={styles.text}>
-      <Text style={{fontWeight:900,fontSize:16,textAlign:'center'}}>Enhancing Presentation Excellence with SlideSnap {'\n\n'}</Text>
-        In today's fast-paced, professional landscape, the ability to create visually compelling and distraction-free presentations is paramount. SlideSnap understands the significance of delivering a seamless user experience by ensuring that presentation content takes full precedence. By addressing key distractions, SlideSnap empowers users to craft professional, polished, and immersive presentations. This not only enhances the visual impact of the content but also elevates the overall user experience, ensuring that every presentation is both engaging and impactful.</Text>
-      <Text style={styles.txt}>
-      <Text style={{fontWeight:900,fontSize:16,textAlign:'center',margintop:150}}>Transform Your Presentations with SlideSnap {'\n\n'}</Text>
-        In today's fast-paced, professional landscape, the ability to create visually compelling and distraction-free presentations is paramount. SlideSnap understands the significance of delivering a seamless user experience by ensuring that presentation content takes full precedence. By addressing key distractions, SlideSnap empowers users to craft professional, polished, and immersive presentations. This not only enhances the visual impact of the content but also elevates the overall user experience, ensuring that every presentation is both engaging and impactful.</Text>
-        <Text style={{fontSize:20}}><Text style={{fontWeight:900}}>   Fun Fact : </Text>Hurry Up..! Deadline is coming..! 😁  </Text>
-   <TouchableOpacity 
-             onPress={() => navigation.navigate('main')}
-           style={styles.btn}>
-           <Text style={{ color: "white", fontSize: 20 }}
-           >Generate Now</Text>
-         </TouchableOpacity>
-   
-           </View>
+        Generate your PPTs instantly!{"\n"}
+        No more wasted time—focus on what matters. {"\n"} Fast, secure, and completely free!
+      </Text>
+
+      <Text style={styles.funFact}>
+        <Text style={{ fontWeight: 'bold' }}>Fun Fact: </Text>
+        Your deadline is closer than you think! ⏳
+      </Text>
+
+      <TouchableOpacity 
+        onPress={() => navigation.navigate('Main')}
+        style={styles.btn}
+      >
+        <Text style={styles.btnText}>Generate Now</Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 
@@ -30,33 +34,47 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'beige',
+    backgroundColor: '#F5F5DC',
+    paddingHorizontal: 20,
+  },
+  title: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    color: '#003366',
+    marginBottom: 20,
+    textAlign:'center',
+    letterSpacing: 1.5,
   },
   text: {
-    marginTop:-100,
-    fontSize: 14,
-    color: 'black',
-    textAlign:'justify',
-    padding:20,
-    fontWeight:400
+    fontSize: 18,
+    color: '#003366', 
+    textAlign: 'center',
+    marginBottom: 30,
+    lineHeight: 26,
+    fontWeight: '500',
   },
-  txt: {
-    fontSize: 14,
-    color: 'black',
-    textAlign:'justify',
-    padding:20,
-    fontWeight:400
+  funFact: {
+    fontSize: 18,
+    color: '#003366', 
+    textAlign: 'center',
+    marginBottom: 30,
+    fontStyle: 'italic',
   },
   btn: {
-    width: 198,
     backgroundColor: "#003366",
-    height: 45,
-    paddingLeft: 30,
-    paddingTop: 9,
-    borderWidth: 1,
-    borderColor: "#003366",
-    borderRadius: 5,
-    marginTop: 25,
-    marginLeft: 18,
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    borderRadius: 30,
+    shadowColor: "#003366",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    elevation: 10,
+  },
+  btnText: {
+    color: "#ffffff",
+    fontSize: 20,
+    fontWeight: "bold",
+    textTransform: 'uppercase',
   },
 });

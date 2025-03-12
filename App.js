@@ -1,48 +1,24 @@
-import { StatusBar } from "expo-status-bar";
+import { StatusBar } from 'expo-status-bar';
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Intro from './src/screens/intro';
-import main from './src/screens/main';
+import Main from './src/screens/main';
 
 const Stack = createStackNavigator();
 
 const HomeScreen = ({ navigation }) => {
   return (
-    <View
-      style={{
-        backgroundColor: "beige",
-        flex: 1,
-        marginTop:30,
-        borderWidth: 1,
-        borderColor: "beige",
-        borderRadius: 15,
-      }}
-    >
-      <Text style={styles.main}>Welcome To</Text>
-      <Text
-        style={{
-          fontSize: 90,
-          marginLeft: 10,
-          fontFamily: "cursive",
-          marginTop: -25,
-        }}
-      >
-        Slidesnap
-      </Text>
-
-      <Text style={{ fontSize: 20, marginLeft: 20, color: "red" }}>
-        Summarize your PPTs in seconds...!
-      </Text>
-      <Text style={{ fontSize: 16, marginLeft: 20 }}>Secure & 100% free</Text>
-
-      {/* ✅ Navigate to Test Screen */}
+    <View style={styles.container}>
+      <Text style={styles.title}>SlideSnap</Text>
+      <Text style={styles.tagline}>Generate your PPTs in seconds </Text>
       <TouchableOpacity 
-        style={styles.getstartedbtn} 
+        style={styles.getStartedBtn} 
         onPress={() => navigation.navigate('Intro')}
       >
-        <Text style={{ color: "white", fontSize: 20 }}>Get Started</Text>
+        <Text style={styles.btnText}>Get Started..!</Text>
       </TouchableOpacity>
     </View>
   );
@@ -60,11 +36,11 @@ export default function App() {
         <Stack.Screen 
           name="Intro" 
           component={Intro} 
-          options={{ headerTitle: 'App Introduction' }}
+          options={{ headerTitle: 'Introduction' }}
         />
         <Stack.Screen 
-          name="main" 
-          component={main} 
+          name="Main" 
+          component={Main} 
           options={{ headerTitle: 'Home' }}
         />
       </Stack.Navigator>
@@ -73,21 +49,40 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  main: {
-    fontSize: 100,
-    marginTop: 100,
-    marginLeft: 10,
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: "beige",
   },
-  getstartedbtn: {
-    width: 150,
+  title: {
+    fontSize: 48,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
+    color: "#333",
+  },
+  tagline: {
+    fontSize: 18,
+    marginBottom: 30,
+    textAlign: "center",
+    color: "#666",
+  },
+  getStartedBtn: {
     backgroundColor: "#003366",
-    height: 45,
-    paddingLeft: 16,
-    paddingTop: 9,
-    borderWidth: 1,
-    borderColor: "#003366",
-    borderRadius: 5,
-    marginTop: 25,
-    marginLeft: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    elevation: 10,
+  },
+  btnText: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });
