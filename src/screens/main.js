@@ -1,237 +1,361 @@
-import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, ActivityIndicator, Platform } from 'react-native';
-import * as DocumentPicker from 'expo-document-picker';
-import * as IntentLauncher from 'expo-intent-launcher';
-import * as FileSystem from 'expo-file-system';
+import { StatusBar } from "expo-status-bar";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+  Linking,
+  Platform,
+  ActivityIndicator,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import * as DocumentPicker from "expo-document-picker";
+import * as IntentLauncher from "expo-intent-launcher";
+import * as FileSystem from "expo-file-system";
+import axios from "axios";
 
-const Main = () => {
-  const [uploadVisible, setUploadVisible] = useState(false);
-  const [text, setText] = useState('');
+const Main = ({ route }) => {
+  const { isDarkTheme } = route.params;
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
 
-  const handleToggleUpload = () => {
-    setUploadVisible(!uploadVisible);
-  };
+  const styles = getDynamicStyles(isDarkTheme);
 
   const handleFileUpload = async (type) => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: type === 'template' 
-          ? 'application/vnd.openxmlformats-officedocument.presentationml.presentation' 
-          : 'application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        type:
+          type === "template"
+            ? ["application/vnd.openxmlformats-officedocument.presentationml.presentation"]
+            : [
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+              ],
       });
 
       if (result.canceled) return;
 
       if (result.assets && result.assets.length > 0) {
         let fileUri = result.assets[0].uri;
-        let fileName = result.assets[0].name || fileUri.split('/').pop();
+        let fileName = result.assets[0].name || fileUri.split("/").pop();
 
-        if (type === 'template') {
+        if (type === "template") {
           setSelectedTemplate({ name: fileName, uri: fileUri });
-          Alert.alert('Template Uploaded', `You uploaded: ${fileName}`);
         } else {
           setSelectedFile({ name: fileName, uri: fileUri });
-          Alert.alert('File Selected', `You selected: ${fileName}`);
         }
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to upload file');
+      Alert.alert("Error", "Failed to upload file");
       console.error("Upload Error:", error);
     }
   };
 
-  const openFile = async (fileUri) => {
-    if (!fileUri) {
-      Alert.alert("Error", "No file found to open");
-      return;
-    }
+  const handleViewFile = async (file) => {
+    if (!file) return;
 
     try {
-      if (Platform.OS === 'android') {
-        const cUri = await FileSystem.getContentUriAsync(fileUri);
+      if (Platform.OS === "android") {
+        const contentUri = await FileSystem.getContentUriAsync(file.uri);
         IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
-          data: cUri,
+          data: contentUri,
           flags: 1,
         });
       } else {
-        Alert.alert("Error", "Opening files is only supported on Android for now.");
+        const supported = await Linking.canOpenURL(file.uri);
+        if (supported) {
+          await Linking.openURL(file.uri);
+        } else {
+          Alert.alert("Error", "Cannot open this file");
+        }
       }
     } catch (error) {
-      Alert.alert("Error", "Cannot open file. Try opening it manually.");
+      Alert.alert("Error", "Unable to open file");
       console.error("File Open Error:", error);
     }
   };
 
-  const handleGenerate = () => {
-    if (!text.trim() || (!selectedFile && !selectedTemplate)) {
-      Alert.alert("Missing Data", "Please provide text input or upload a file.");
+  const handleRemoveFile = (type) => {
+    if (type === "template") {
+      setSelectedTemplate(null);
+    } else {
+      setSelectedFile(null);
+    }
+    setUploadStatus("");
+  };
+
+  const getMimeType = (filename) => {
+    const ext = filename.split(".").pop().toLowerCase();
+    switch (ext) {
+      case "pptx":
+        return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+      case "docx":
+        return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      case "xlsx":
+        return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+      default:
+        return "application/octet-stream";
+    }
+  };
+
+  const handleGeneratePresentation = async () => {
+    if (!selectedFile) {
+      Alert.alert("Error", "Please upload a reference file to generate slides.");
       return;
     }
-    
+
     setLoading(true);
-    setTimeout(() => {
+    setUploadStatus("");
+
+    try {
+      const formData = new FormData();
+      formData.append("reference", {
+        uri: selectedFile.uri,
+        name: selectedFile.name,
+        type: getMimeType(selectedFile.name),
+      });
+      if (selectedTemplate) {
+        formData.append("template", {
+          uri: selectedTemplate.uri,
+          name: selectedTemplate.name,
+          type: getMimeType(selectedTemplate.name),
+        });
+      }
+
+      console.log("Sending files to server:", {
+        reference: selectedFile.name,
+        template: selectedTemplate?.name,
+      });
+
+      // Test connectivity with health endpoint
+      // const healthCheck = await axios.get("http://10.0.2.2:5000/health");
+      // console.log("Health check response:", healthCheck.data);
+
+      const response = await axios.post(
+        "http://192.168.80.65:5000/upload3", // Updated IP for Android Emulator
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          timeout: 15000, // 15-second timeout
+        }
+      );
+
+      console.log("Server response:", response.data);
+      setUploadStatus("Files uploaded successfully! Slides generated.");
+      Alert.alert("Success", "Your slides have been generated!");
+    } catch (error) {
+      console.error("Detailed upload error:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        stack: error.stack,
+      });
+      const errorMsg = error.response?.data?.error || error.message;
+      setUploadStatus(`Upload failed: ${errorMsg}`);
+      Alert.alert("Error", `Failed to generate slides: ${errorMsg}`);
+    } finally {
       setLoading(false);
-      Alert.alert("Success", "Your presentation is generated!");
-    }, 3000);
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>Add Your Idea</Text>
-      <TextInput
-        style={styles.textArea}
-        multiline={true}
-        onChangeText={setText}
-        value={text}
-        numberOfLines={4}
-        maxLength={200}
-        placeholder="Type your idea..."
-        placeholderTextColor="#666"
-      />
+    <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Create Slides</Text>
+        <Text style={styles.subtitle}>Drop your files, craft your masterpiece</Text>
+      </View>
 
-      <TouchableOpacity style={styles.attachBtn} onPress={handleToggleUpload}>
-        <Text style={styles.attachBtnText}>+ Attach Files</Text>
+      <View style={styles.uploadContainer}>
+        <View style={styles.uploadBox}>
+          <Ionicons name="cloud-upload-outline" size={40} color={isDarkTheme ? "#A5B4FC" : "#1E3A8A"} />
+          <Text style={styles.uploadText}>Upload Reference</Text>
+          <TouchableOpacity style={styles.uploadButton} onPress={() => handleFileUpload("reference")}>
+            <Text style={styles.buttonText}>Choose File</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.uploadBox}>
+          <Ionicons name="document-outline" size={40} color={isDarkTheme ? "#A5B4FC" : "#1E3A8A"} />
+          <Text style={styles.uploadText}>Upload Template</Text>
+          <TouchableOpacity style={styles.uploadButton} onPress={() => handleFileUpload("template")}>
+            <Text style={styles.buttonText}>Choose File</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {(selectedFile || selectedTemplate) && (
+        <View style={styles.filesContainer}>
+          <Text style={styles.sectionTitle}>Your Files</Text>
+          {selectedFile && (
+            <View style={[styles.fileCard, { borderStyle: "solid" }]}>
+              <Ionicons name="document-text-outline" size={24} color={isDarkTheme ? "#D1D5DB" : "#4B5563"} />
+              <Text style={styles.fileName}>{selectedFile.name}</Text>
+              <View style={styles.fileActions}>
+                <TouchableOpacity onPress={() => handleViewFile(selectedFile)}>
+                  <Ionicons name="eye" size={20} color={isDarkTheme ? "#A5B4FC" : "#1E3A8A"} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleRemoveFile("reference")} style={styles.actionIcon}>
+                  <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+          {selectedTemplate && (
+            <View style={[styles.fileCard, { borderStyle: "solid" }]}>
+              <Ionicons name="albums-outline" size={24} color={isDarkTheme ? "#D1D5DB" : "#4B5563"} />
+              <Text style={styles.fileName}>{selectedTemplate.name}</Text>
+              <View style={styles.fileActions}>
+                <TouchableOpacity onPress={() => handleViewFile(selectedTemplate)}>
+                  <Ionicons name="eye" size={20} color={isDarkTheme ? "#A5B4FC" : "#1E3A8A"} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleRemoveFile("template")} style={styles.actionIcon}>
+                  <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </View>
+      )}
+
+      {uploadStatus ? <Text style={[styles.subtitle, { marginBottom: 12 }]}>{uploadStatus}</Text> : null}
+
+      <TouchableOpacity
+        style={[styles.generateButton, { opacity: loading || !selectedFile ? 0.7 : 1 }]}
+        onPress={handleGeneratePresentation}
+        disabled={loading || !selectedFile}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        ) : (
+          <>
+            <Ionicons name="sparkles" size={24} color="#FFFFFF" />
+            <Text style={styles.generateButtonText}>Generate Slides</Text>
+          </>
+        )}
       </TouchableOpacity>
-      
-      {uploadVisible && (
-        <View style={styles.uploadContainer}>
-          <TouchableOpacity style={styles.uploadRefBtn} onPress={() => handleFileUpload('reference')}>
-            <Text style={styles.uploadBtnText}>Upload Reference (.pptx, .docx, .xlsx)</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.uploadTempBtn} onPress={() => handleFileUpload('template')}>
-            <Text style={styles.uploadBtnText}>Upload Template (.pptx)</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {selectedFile && (
-        <View style={styles.fileRow}>
-          <Text style={styles.fileText}>{selectedFile.name}</Text>
-          <TouchableOpacity onPress={() => openFile(selectedFile.uri)} style={styles.viewBtn}>
-            <Text style={styles.viewBtnText}>View </Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setSelectedFile(null)}>
-            <Text style={styles.removeBtn}>Remove</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {selectedTemplate && (
-        <View style={styles.fileRow}>
-          <Text style={styles.fileText}>{selectedTemplate.name}</Text>
-          <TouchableOpacity onPress={() => openFile(selectedTemplate.uri)} style={styles.viewBtn}>
-            <Text style={styles.viewBtnText}>View </Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setSelectedTemplate(null)}>
-            <Text style={styles.removeBtn}>Remove</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {loading ? <ActivityIndicator size="large" color="#003366" style={{ marginTop: 20 }} /> : (
-        <TouchableOpacity style={styles.generateBtn} onPress={handleGenerate}>
-          <Text style={styles.generateBtnText}>Generate </Text>
-        </TouchableOpacity>
-      )}
-    </View>
+    </ScrollView>
   );
 };
 
 export default Main;
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5F5DC',
-    paddingHorizontal: 20,
-  },
-  heading: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#003366',
-    marginBottom: 20,
-    textAlign: 'center'
-  },
-  textArea: {
-    width: '100%',
-    height: 140,
-    borderWidth: 1,
-    padding: 10,
-    textAlignVertical: 'top',
-    fontSize: 16,
-    borderRadius: 8,
-    borderColor: '#003366',
-    backgroundColor: '#fff',
-    color: '#003366',
-    marginBottom: 15,
-  },
-  attachBtn: {
-    backgroundColor: '#003366',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-    marginBottom: 10,
-  },
-  attachBtnText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  uploadContainer: {
-    marginTop: 10,
-  },
-  uploadBtn: {
-    backgroundColor: '#ccc',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    marginBottom: 10,
-    alignItems: 'center',
-  },
-  uploadRefBtn: {
-    backgroundColor: '#ccc',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    marginBottom: 10,
-    alignItems: 'center',
-    marginLeft:200,
-    marginBottom:-65
-  },
-  uploadTempBtn: {
-    backgroundColor: '#ccc',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    marginBottom: 10,
-    alignItems: 'center',
-    marginRight:200
-
-  },
-  uploadBtnText: {
-    color: '#003366',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  generateBtn: {
-    backgroundColor: '#003366',
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 10,
-    marginTop: 20,
-    width:380,
-    paddingRight:130
-  },
-  generateBtnText: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-});
+const getDynamicStyles = (isDarkTheme) =>
+  StyleSheet.create({
+    container: {
+      flexGrow: 1,
+      backgroundColor: isDarkTheme ? "#0F172A" : "#F9FAFB",
+      padding: 20,
+      alignItems: "center",
+    },
+    header: {
+      alignItems: "center",
+      marginBottom: 24,
+    },
+    title: {
+      fontSize: 32,
+      fontWeight: "800",
+      color: isDarkTheme ? "#A5B4FC" : "#1E3A8A",
+      textAlign: "center",
+    },
+    subtitle: {
+      fontSize: 16,
+      color: isDarkTheme ? "#D1D5DB" : "#6B7280",
+      fontWeight: "400",
+      textAlign: "center",
+      marginTop: 4,
+    },
+    uploadContainer: {
+      flexDirection: "column",
+      gap: 10,
+      justifyContent: "space-between",
+      width: "100%",
+      marginBottom: 24,
+    },
+    uploadBox: {
+      flex: 1,
+      backgroundColor: isDarkTheme ? "#1E293B" : "#ddd",
+      borderRadius: 16,
+      padding: 16,
+      alignItems: "center",
+      marginHorizontal: 8,
+      borderWidth: 2,
+      borderColor: isDarkTheme ? "#374151" : "#aaa",
+      borderStyle: "dashed",
+    },
+    uploadText: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: isDarkTheme ? "#A5B4FC" : "#1E3A8A",
+      marginVertical: 8,
+    },
+    uploadButton: {
+      backgroundColor: isDarkTheme ? "#8B5CF6" : "#1E3A8A",
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+      alignItems: "center",
+    },
+    buttonText: {
+      color: "#FFFFFF",
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    filesContainer: {
+      width: "100%",
+      marginBottom: 24,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: "600",
+      color: isDarkTheme ? "#A5B4FC" : "#1E3A8A",
+      marginBottom: 12,
+    },
+    fileCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: isDarkTheme ? "#1E293B" : "#FFFFFF",
+      borderRadius: 12,
+      padding: 12,
+      marginVertical: 4,
+      borderWidth: 2,
+      borderColor: isDarkTheme ? "#374151" : "#E5E7EB",
+      borderStyle: "dashed",
+    },
+    fileName: {
+      fontSize: 14,
+      color: isDarkTheme ? "#D1D5DB" : "#4B5563",
+      flex: 1,
+      marginLeft: 12,
+      marginRight: 8,
+    },
+    fileActions: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    actionIcon: {
+      marginLeft: 16,
+    },
+    generateButton: {
+      flexDirection: "row",
+      backgroundColor: isDarkTheme ? "#10B981" : "#059669",
+      paddingVertical: 14,
+      paddingHorizontal: 32,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      width: "90%",
+    },
+    generateButtonText: {
+      color: "#FFFFFF",
+      fontSize: 18,
+      fontWeight: "600",
+      marginLeft: 8,
+    },
+  });
