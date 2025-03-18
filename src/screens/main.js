@@ -104,15 +104,76 @@ const Main = ({ route }) => {
     }
   };
 
+  // const handleGeneratePresentation = async () => {
+  //   if (!selectedFile) {
+  //     Alert.alert("Error", "Please upload a reference file to generate slides.");
+  //     return;
+  //   }
+
+  //   setLoading(true);
+  //   setUploadStatus("");
+
+  //   try {
+  //     const formData = new FormData();
+  //     formData.append("reference", {
+  //       uri: selectedFile.uri,
+  //       name: selectedFile.name,
+  //       type: getMimeType(selectedFile.name),
+  //     });
+  //     if (selectedTemplate) {
+  //       formData.append("template", {
+  //         uri: selectedTemplate.uri,
+  //         name: selectedTemplate.name,
+  //         type: getMimeType(selectedTemplate.name),
+  //       });
+  //     }
+
+  //     console.log("Sending files to server:", {
+  //       reference: selectedFile.name,
+  //       template: selectedTemplate?.name,
+  //     });
+
+  //     // Test connectivity with health endpoint
+  //     // const healthCheck = await axios.get("http://10.0.2.2:5000/health");
+  //     // console.log("Health check response:", healthCheck.data);
+
+  //     const response = await axios.post(
+  //       "http://192.168.80.65:5000/upload", // Updated IP for Android Emulator
+  //       formData,
+  //       {
+  //         headers: {
+  //           "Content-Type": "multipart/form-data",
+  //         },
+  //         timeout: 120000, // 15-second timeout
+  //       }
+  //     );
+
+  //     console.log("Server response:", response.data);
+  //     setUploadStatus("Files uploaded successfully! Slides generated.");
+  //     Alert.alert("Success", "Your slides have been generated!");
+  //   } catch (error) {
+  //     console.error("Detailed upload error:", {
+  //       message: error.message,
+  //       response: error.response?.data,
+  //       status: error.response?.status,
+  //       stack: error.stack,
+  //     });
+  //     const errorMsg = error.response?.data?.error || error.message;
+  //     setUploadStatus(`Upload failed: ${errorMsg}`);
+  //     Alert.alert("Error", `Failed to generate slides: ${errorMsg}`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const handleGeneratePresentation = async () => {
     if (!selectedFile) {
       Alert.alert("Error", "Please upload a reference file to generate slides.");
       return;
     }
-
+  
     setLoading(true);
     setUploadStatus("");
-
+  
     try {
       const formData = new FormData();
       formData.append("reference", {
@@ -127,45 +188,47 @@ const Main = ({ route }) => {
           type: getMimeType(selectedTemplate.name),
         });
       }
-
+  
       console.log("Sending files to server:", {
         reference: selectedFile.name,
         template: selectedTemplate?.name,
       });
-
-      // Test connectivity with health endpoint
-      // const healthCheck = await axios.get("http://10.0.2.2:5000/health");
-      // console.log("Health check response:", healthCheck.data);
-
+  
       const response = await axios.post(
-        "http://192.168.80.65:5000/upload3", // Updated IP for Android Emulator
+        "http://192.168.80.81:5000/process",
         formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-          timeout: 15000, // 15-second timeout
+          timeout: 220000, 
         }
       );
-
+  
       console.log("Server response:", response.data);
       setUploadStatus("Files uploaded successfully! Slides generated.");
       Alert.alert("Success", "Your slides have been generated!");
-    } catch (error) {
+    }catch (error) {
       console.error("Detailed upload error:", {
         message: error.message,
         response: error.response?.data,
         status: error.response?.status,
-        stack: error.stack,
+        code: error.code,
       });
-      const errorMsg = error.response?.data?.error || error.message;
+      let errorMsg;
+      if (error.code === "ECONNABORTED") {
+        errorMsg = "Request timed out. Server may be slow or unreachable.";
+      } else if (error.message === "Network Error") {
+        errorMsg = "Cannot connect to server. Verify IP (192.168.80.65:5000) and network.";
+      } else {
+        errorMsg = error.response?.data?.error || error.message;
+      }
       setUploadStatus(`Upload failed: ${errorMsg}`);
       Alert.alert("Error", `Failed to generate slides: ${errorMsg}`);
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
