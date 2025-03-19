@@ -15,14 +15,13 @@ import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
 import * as IntentLauncher from "expo-intent-launcher";
 import * as FileSystem from "expo-file-system";
-import axios from "axios";
 
 const Main = ({ route }) => {
   const { isDarkTheme } = route.params;
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState("");
+  const [generatedFileUri, setGeneratedFileUri] = useState(null); // Store the saved file URI
 
   const styles = getDynamicStyles(isDarkTheme);
 
@@ -57,20 +56,20 @@ const Main = ({ route }) => {
     }
   };
 
-  const handleViewFile = async (file) => {
-    if (!file) return;
+  const handleViewFile = async (fileUri) => {
+    if (!fileUri) return;
 
     try {
       if (Platform.OS === "android") {
-        const contentUri = await FileSystem.getContentUriAsync(file.uri);
+        const contentUri = await FileSystem.getContentUriAsync(fileUri);
         IntentLauncher.startActivityAsync("android.intent.action.VIEW", {
           data: contentUri,
           flags: 1,
         });
       } else {
-        const supported = await Linking.canOpenURL(file.uri);
+        const supported = await Linking.canOpenURL(fileUri);
         if (supported) {
-          await Linking.openURL(file.uri);
+          await Linking.openURL(fileUri);
         } else {
           Alert.alert("Error", "Cannot open this file");
         }
@@ -87,148 +86,76 @@ const Main = ({ route }) => {
     } else {
       setSelectedFile(null);
     }
-    setUploadStatus("");
   };
 
-  const getMimeType = (filename) => {
-    const ext = filename.split(".").pop().toLowerCase();
-    switch (ext) {
-      case "pptx":
-        return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-      case "docx":
-        return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-      case "xlsx":
-        return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-      default:
-        return "application/octet-stream";
-    }
-  };
-
-  // const handleGeneratePresentation = async () => {
-  //   if (!selectedFile) {
-  //     Alert.alert("Error", "Please upload a reference file to generate slides.");
-  //     return;
-  //   }
-
-  //   setLoading(true);
-  //   setUploadStatus("");
-
-  //   try {
-  //     const formData = new FormData();
-  //     formData.append("reference", {
-  //       uri: selectedFile.uri,
-  //       name: selectedFile.name,
-  //       type: getMimeType(selectedFile.name),
-  //     });
-  //     if (selectedTemplate) {
-  //       formData.append("template", {
-  //         uri: selectedTemplate.uri,
-  //         name: selectedTemplate.name,
-  //         type: getMimeType(selectedTemplate.name),
-  //       });
-  //     }
-
-  //     console.log("Sending files to server:", {
-  //       reference: selectedFile.name,
-  //       template: selectedTemplate?.name,
-  //     });
-
-  //     // Test connectivity with health endpoint
-  //     // const healthCheck = await axios.get("http://10.0.2.2:5000/health");
-  //     // console.log("Health check response:", healthCheck.data);
-
-  //     const response = await axios.post(
-  //       "http://192.168.80.65:5000/upload", // Updated IP for Android Emulator
-  //       formData,
-  //       {
-  //         headers: {
-  //           "Content-Type": "multipart/form-data",
-  //         },
-  //         timeout: 120000, // 15-second timeout
-  //       }
-  //     );
-
-  //     console.log("Server response:", response.data);
-  //     setUploadStatus("Files uploaded successfully! Slides generated.");
-  //     Alert.alert("Success", "Your slides have been generated!");
-  //   } catch (error) {
-  //     console.error("Detailed upload error:", {
-  //       message: error.message,
-  //       response: error.response?.data,
-  //       status: error.response?.status,
-  //       stack: error.stack,
-  //     });
-  //     const errorMsg = error.response?.data?.error || error.message;
-  //     setUploadStatus(`Upload failed: ${errorMsg}`);
-  //     Alert.alert("Error", `Failed to generate slides: ${errorMsg}`);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
   const handleGeneratePresentation = async () => {
-    if (!selectedFile) {
-      Alert.alert("Error", "Please upload a reference file to generate slides.");
+    if (!selectedFile || !selectedTemplate) {
+      Alert.alert("Error", "Please upload both reference and template files.");
       return;
     }
-  
+
     setLoading(true);
-    setUploadStatus("");
-  
+
+    const formData = new FormData();
+    formData.append("referenceFile", {
+      uri: selectedFile.uri,
+      name: selectedFile.name,
+      type: selectedFile.mimeType || "application/octet-stream",
+    });
+    formData.append("templateFile", {
+      uri: selectedTemplate.uri,
+      name: selectedTemplate.name,
+      type: selectedTemplate.mimeType || "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    });
+
     try {
-      const formData = new FormData();
-      formData.append("reference", {
-        uri: selectedFile.uri,
-        name: selectedFile.name,
-        type: getMimeType(selectedFile.name),
+      const response = await fetch("http://192.168.80.65:5000/generate_ppt", {
+        method: "POST",
+        body: formData,
       });
-      if (selectedTemplate) {
-        formData.append("template", {
-          uri: selectedTemplate.uri,
-          name: selectedTemplate.name,
-          type: getMimeType(selectedTemplate.name),
+
+      if (!response.ok) {
+        const errorData = await response.json(); // Expect JSON error from Flask
+        throw new Error(errorData.error || `Server error: ${response.status}`);
+      }
+
+      // Handle the .pptx file response
+      const blob = await response.blob();
+      const fileUri = `${FileSystem.documentDirectory}modified_presentation.pptx`;
+
+      // Convert blob to Base64 and save
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64data = reader.result.split(",")[1]; // Strip prefix
+        await FileSystem.writeAsStringAsync(fileUri, base64data, {
+          encoding: FileSystem.EncodingType.Base64,
         });
-      }
-  
-      console.log("Sending files to server:", {
-        reference: selectedFile.name,
-        template: selectedTemplate?.name,
-      });
-  
-      const response = await axios.post(
-        "http://192.168.80.81:5000/process",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          timeout: 220000, 
-        }
-      );
-  
-      console.log("Server response:", response.data);
-      setUploadStatus("Files uploaded successfully! Slides generated.");
-      Alert.alert("Success", "Your slides have been generated!");
-    }catch (error) {
-      console.error("Detailed upload error:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        code: error.code,
-      });
-      let errorMsg;
-      if (error.code === "ECONNABORTED") {
-        errorMsg = "Request timed out. Server may be slow or unreachable.";
-      } else if (error.message === "Network Error") {
-        errorMsg = "Cannot connect to server. Verify IP (192.168.80.65:5000) and network.";
-      } else {
-        errorMsg = error.response?.data?.error || error.message;
-      }
-      setUploadStatus(`Upload failed: ${errorMsg}`);
-      Alert.alert("Error", `Failed to generate slides: ${errorMsg}`);
+        setGeneratedFileUri(fileUri); // Enable download button
+        Alert.alert("Success", "Presentation generated successfully!");
+      };
+      reader.readAsDataURL(blob);
+    } catch (error) {
+      console.error("Error:", error);
+      Alert.alert("Error", error.message || "Failed to generate presentation.");
     } finally {
       setLoading(false);
     }
   };
+
+  const handleDownloadFile = async () => {
+    if (!generatedFileUri) {
+      Alert.alert("Error", "No file available to download.");
+      return;
+    }
+
+    try {
+      await handleViewFile(generatedFileUri); // Open the file
+    } catch (error) {
+      Alert.alert("Error", "Failed to open downloaded file.");
+      console.error("Download Error:", error);
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
@@ -261,7 +188,7 @@ const Main = ({ route }) => {
               <Ionicons name="document-text-outline" size={24} color={isDarkTheme ? "#D1D5DB" : "#4B5563"} />
               <Text style={styles.fileName}>{selectedFile.name}</Text>
               <View style={styles.fileActions}>
-                <TouchableOpacity onPress={() => handleViewFile(selectedFile)}>
+                <TouchableOpacity onPress={() => handleViewFile(selectedFile.uri)}>
                   <Ionicons name="eye" size={20} color={isDarkTheme ? "#A5B4FC" : "#1E3A8A"} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => handleRemoveFile("reference")} style={styles.actionIcon}>
@@ -275,7 +202,7 @@ const Main = ({ route }) => {
               <Ionicons name="albums-outline" size={24} color={isDarkTheme ? "#D1D5DB" : "#4B5563"} />
               <Text style={styles.fileName}>{selectedTemplate.name}</Text>
               <View style={styles.fileActions}>
-                <TouchableOpacity onPress={() => handleViewFile(selectedTemplate)}>
+                <TouchableOpacity onPress={() => handleViewFile(selectedTemplate.uri)}>
                   <Ionicons name="eye" size={20} color={isDarkTheme ? "#A5B4FC" : "#1E3A8A"} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => handleRemoveFile("template")} style={styles.actionIcon}>
@@ -286,8 +213,6 @@ const Main = ({ route }) => {
           )}
         </View>
       )}
-
-      {uploadStatus ? <Text style={[styles.subtitle, { marginBottom: 12 }]}>{uploadStatus}</Text> : null}
 
       <TouchableOpacity
         style={[styles.generateButton, { opacity: loading || !selectedFile ? 0.7 : 1 }]}
@@ -303,6 +228,18 @@ const Main = ({ route }) => {
           </>
         )}
       </TouchableOpacity>
+
+      {generatedFileUri && (
+        <TouchableOpacity
+          style={[styles.downloadButton, { marginTop: 16 }]}
+          onPress={handleDownloadFile}
+        >
+          <Ionicons name="download-outline" size={24} color="#FFFFFF" />
+          <Text style={styles.generateButtonText}>Download Presentation</Text>
+        </TouchableOpacity>
+      )}
+
+      <StatusBar style={isDarkTheme ? "light" : "dark"} />
     </ScrollView>
   );
 };
@@ -408,6 +345,16 @@ const getDynamicStyles = (isDarkTheme) =>
     generateButton: {
       flexDirection: "row",
       backgroundColor: isDarkTheme ? "#10B981" : "#059669",
+      paddingVertical: 14,
+      paddingHorizontal: 32,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      width: "90%",
+    },
+    downloadButton: {
+      flexDirection: "row",
+      backgroundColor: isDarkTheme ? "#3B82F6" : "#2563EB",
       paddingVertical: 14,
       paddingHorizontal: 32,
       borderRadius: 12,
