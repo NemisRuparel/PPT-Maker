@@ -20,117 +20,13 @@ import * as MailComposer from "expo-mail-composer";
 import Intro from "./src/screens/intro";
 import Main from "./src/screens/main";
 import Slider from "@react-native-community/slider";
-import i18n from 'i18n-js';
-
-// Language translations
-const translations = {
-  en: {
-    welcome: "Welcome to SlideSnap",
-    getStarted: "Let’s Get Started",
-    namePrompt: "What’s Your Name?",
-    personalize: "We’d love to personalize your experience!",
-    continue: "Continue",
-    forgotPPT: "Forgot to make PPTs? No worry, we are here..! 😊",
-    presentPower: "Present with Power",
-    getStartedBtn: "Get Started",
-    workflow: "Your Workflow, Amplified",
-    importData: "Import data and deliver impactful presentations with ease.",
-    learnMore: "Learn More",
-    shapeFuture: "Shape Our Future",
-    insights: "Your Insights",
-    suggestions: "Suggestions?",
-    submit: "Submit",
-    appearance: "Appearance",
-    light: "Light",
-    dark: "Dark",
-    fontSize: "Font Size",
-    small: "Small",
-    large: "Large",
-    language: "Language",
-    reset: "Reset to Default",
-    faq: "Questionarie",
-    faq1q: "How do I begin?",
-    faq1a: "Import your data, style it, and export.",
-    faq2q: "Appearance options?",
-    faq2a: "Go to Settings.",
-    faq3q: "How to connect?",
-    faq3a: "Use the Feedback screen."
-  },
-  gu: {
-    welcome: "સ્લાઇડસ્નેપમાં સ્વાગત છે",
-    getStarted: "ચાલો શરૂ કરીએ",
-    namePrompt: "તમારું નામ શું છે?",
-    personalize: "અમે તમારા અનુભવને વ્યક્તિગત કરવા માંગીએ છીએ!",
-    continue: "ચાલુ રાખો",
-    forgotPPT: "PPT બનાવવાનું ભૂલી ગયા? ચિંતા નહીં, અમે અહીં છીએ..! 😊",
-    presentPower: "શક્તિશાળી રજૂઆત",
-    getStartedBtn: "શરૂ કરો",
-    workflow: "તમારું કાર્યપ્રવાહ, વિસ્તૃત",
-    importData: "ડેટા આયાત કરો અને સરળતાથી પ્રભાવશાળી રજૂઆતો આપો.",
-    learnMore: "વધુ જાણો",
-    shapeFuture: "અમારું ભવિષ્ય ઘડો",
-    insights: "તમારી આંતરદૃષ્ટિ",
-    suggestions: "સૂચનો?",
-    submit: "સબમિટ કરો",
-    appearance: "દેખાવ",
-    light: "પ્રકાશ",
-    dark: "ઘેરો",
-    fontSize: "ફોન્ટ સાઇઝ",
-    small: "નાનું",
-    large: "મોટું",
-    language: "ભાષા",
-    reset: "ડિફોલ્ટ પર રીસેટ કરો",
-    faq: "પ્રશ્નોત્તરી",
-    faq1q: "હું કેવી રીતે શરૂ કરું?",
-    faq1a: "તમારો ડેટા આયાત કરો, તેને સ્ટાઇલ કરો અને નિકાસ કરો.",
-    faq2q: "દેખાવના વિકલ્પો?",
-    faq2a: "સેટિંગ્સ પર જાઓ.",
-    faq3q: "કેવી રીતે જોડાવું?",
-    faq3a: "ફીડબેક સ્ક્રીનનો ઉપયોગ કરો."
-  },
-  hi: {
-    welcome: "स्लाइडस्नैप में आपका स्वागत है",
-    getStarted: "चलें शुरू करें",
-    namePrompt: "आपका नाम क्या है?",
-    personalize: "हम आपके अनुभव को व्यक्तिगत बनाना चाहेंगे!",
-    continue: "जारी रखें",
-    forgotPPT: "PPT बनाना भूल गए? कोई चिंता नहीं, हम यहाँ हैं..! 😊",
-    presentPower: "शक्तिशाली प्रस्तुति",
-    getStartedBtn: "शुरू करें",
-    workflow: "आपका कार्यप्रवाह, बढ़ाया गया",
-    importData: "डेटा आयात करें और प्रभावशाली प्रस्तुतियाँ आसानी से दें।",
-    learnMore: "और जानें",
-    shapeFuture: "हमारा भविष्य आकार दें",
-    insights: "आपकी अंतर्दृष्टि",
-    suggestions: "सुझाव?",
-    submit: "जमा करें",
-    appearance: "दिखावट",
-    light: "हल्का",
-    dark: "गहरा",
-    fontSize: "फॉन्ट आकार",
-    small: "छोटा",
-    large: "बड़ा",
-    language: "भाषा",
-    reset: "डिफ़ॉल्ट पर रीसेट करें",
-    faq: "प्रश्नावली",
-    faq1q: "मैं कैसे शुरू करूं?",
-    faq1a: "अपना डेटा आयात करें, इसे स्टाइल करें और निर्यात करें।",
-    faq2q: "दिखावट के विकल्प?",
-    faq2a: "सेटिंग्स पर जाएं।",
-    faq3q: "कैसे संपर्क करें?",
-    faq3a: "फीडबैक स्क्रीन का उपयोग करें।"
-  }
-};
-
-i18n.translations = translations;
-i18n.fallbacks = true;
-i18n.locale = "en"; // Default language
 
 const { width, height } = Dimensions.get("window");
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 const SPACING = 20;
 
+// Updated Dynamic Styles with Font Size
 const getDynamicStyles = (isDarkTheme, fontSize) =>
   StyleSheet.create({
     container: {
@@ -300,6 +196,7 @@ const getDynamicStyles = (isDarkTheme, fontSize) =>
     },
   });
 
+// Splash Screen
 const SplashScreen = ({ onFinish, isDarkTheme, fontSize }) => {
   const styles = getDynamicStyles(isDarkTheme, fontSize);
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -327,6 +224,7 @@ const SplashScreen = ({ onFinish, isDarkTheme, fontSize }) => {
   );
 };
 
+// Attractive Get Started Screen (No LinearGradient, No 3D Animation)
 const GetStartedScreen = ({ onFinish, isDarkTheme, fontSize }) => {
   const styles = getDynamicStyles(isDarkTheme, fontSize);
   const [fadeTitleAnim] = useState(new Animated.Value(0));
@@ -352,33 +250,46 @@ const GetStartedScreen = ({ onFinish, isDarkTheme, fontSize }) => {
   return (
     <SafeAreaView style={styles.getStartedContainer}>
       <Animated.View
-        style={{ opacity: fadeTitleAnim, transform: [{ translateY: translateYTitleAnim }] }}
+        style={{
+          opacity: fadeTitleAnim,
+          transform: [{ translateY: translateYTitleAnim }],
+        }}
       >
         <Text style={[styles.title, { fontSize: 40 + fontSize, color: isDarkTheme ? "#5CE1E6" : "#2A4D9C" }]}>
-          {i18n.t('welcome')}
+          Welcome to SlideSnap
         </Text>
       </Animated.View>
       <Animated.View
-        style={{ opacity: fadeSubtitleAnim, transform: [{ translateY: translateYSubtitleAnim }] }}
+        style={{
+          opacity: fadeSubtitleAnim,
+          transform: [{ translateY: translateYSubtitleAnim }],
+        }}
       >
         <Text style={[styles.subtitle, { fontSize: 20 + fontSize, marginVertical: SPACING * 2 }]}>
-          {i18n.t('getStarted')}
+          Create stunning presentations effortlessly!
         </Text>
       </Animated.View>
       <Animated.View style={{ transform: [{ scale: scaleButtonAnim }] }}>
         <TouchableOpacity
-          style={[styles.button, { backgroundColor: "#F59E0B", borderRadius: 20, paddingVertical: SPACING - 2, paddingHorizontal: SPACING * 3 }]}
+          style={[
+            styles.button,
+            {
+              backgroundColor: "#F59E0B",
+              borderRadius: 20,
+              paddingVertical: SPACING - 2,
+              paddingHorizontal: SPACING * 3,
+            },
+          ]}
           onPress={onFinish}
         >
-          <Text style={[styles.buttonText, { fontSize: 20 + fontSize }]}>
-            {i18n.t('getStarted')}
-          </Text>
+          <Text style={[styles.buttonText, { fontSize: 20 + fontSize }]}>Let’s Get Started</Text>
         </TouchableOpacity>
       </Animated.View>
     </SafeAreaView>
   );
 };
 
+// Name Input Screen
 const NameInputScreen = ({ onFinish, isDarkTheme, fontSize, setUsername }) => {
   const styles = getDynamicStyles(isDarkTheme, fontSize);
   const [name, setName] = useState("");
@@ -401,11 +312,9 @@ const NameInputScreen = ({ onFinish, isDarkTheme, fontSize, setUsername }) => {
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container}>
         <Animated.View style={{ opacity: fadeAnim }}>
-          <Text style={[styles.title, { marginTop: 100 }]}>
-            {i18n.t('namePrompt')}
-          </Text>
+          <Text style={[styles.title, { marginTop: 100 }]}>What’s Your Name?</Text>
           <Text style={styles.subtitle}>
-            {i18n.t('personalize')}
+            We’d love to personalize your experience!
           </Text>
           <TextInput
             style={styles.input}
@@ -415,9 +324,7 @@ const NameInputScreen = ({ onFinish, isDarkTheme, fontSize, setUsername }) => {
             onChangeText={setName}
           />
           <TouchableOpacity style={styles.button} onPress={handleContinue}>
-            <Text style={styles.buttonText}>
-              {i18n.t('continue')}
-            </Text>
+            <Text style={styles.buttonText}>Continue</Text>
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>
@@ -425,6 +332,7 @@ const NameInputScreen = ({ onFinish, isDarkTheme, fontSize, setUsername }) => {
   );
 };
 
+// Updated Home Screen with Time-Based Greeting
 const HomeScreen = ({ navigation, isDarkTheme, fontSize, username }) => {
   const styles = getDynamicStyles(isDarkTheme, fontSize);
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -437,6 +345,7 @@ const HomeScreen = ({ navigation, isDarkTheme, fontSize, username }) => {
     ]).start();
   }, []);
 
+  // Function to determine greeting based on specified time ranges
   const getTimeBasedGreeting = () => {
     const now = new Date();
     const currentHour = now.getHours();
@@ -451,7 +360,7 @@ const HomeScreen = ({ navigation, isDarkTheme, fontSize, username }) => {
     } else if (currentHour >= 18 && currentHour <= 21) {
       return "Good Evening";
     } else {
-      return "Hello";
+      return "Hello"; // Default for times outside 6 AM - 9 PM (e.g., night)
     }
   };
 
@@ -463,42 +372,36 @@ const HomeScreen = ({ navigation, isDarkTheme, fontSize, username }) => {
             <Text style={[styles.title, { marginRight: 170, marginTop: -30, marginBottom: 50, fontSize: 45, color: isDarkTheme ? "#ffffff" : "#000000" }]}>
               ѕℓι∂єѕηαρ
             </Text>
-            <Text style={[styles.title, { marginTop: -20, marginBottom: 2, fontSize: 25, textAlign:'left', marginLeft:-100, width: 300 }]}>
+            <Text style={[styles.title, { marginTop: -20, marginBottom: 2, fontSize: 25,textAlign:'left',marginLeft:-100,width: 300 }]}>
               {getTimeBasedGreeting()}, {username}!
             </Text>
             <Text style={[styles.subtitle, { fontSize: 15, marginRight: 60 }]}>
-              {i18n.t('forgotPPT')}
+              Forgot to make PPTs? No worry, we are here..! 😊
             </Text>
           </View>
           <View>
             <Image source={require('./assets/1.png')} style={{ width: 300, height: 300, marginLeft: 50 }} />
             <View style={styles.banner}>
-              <Text style={styles.bannerText}>
-                {i18n.t('presentPower')}
-              </Text>
+              <Text style={styles.bannerText}>Present with Power</Text>
               <TouchableOpacity
                 style={[styles.button, { backgroundColor: "#FFFFFF", marginTop: SPACING }]}
                 onPress={() => navigation.navigate("Main", { isDarkTheme })}
               >
                 <Text style={[styles.buttonText, { color: isDarkTheme ? "#10B981" : "#059669" }]}>
-                  {i18n.t('getStartedBtn')}
+                  Get Started
                 </Text>
               </TouchableOpacity>
             </View>
             <View style={styles.card}>
-              <Text style={styles.featureTitle}>
-                {i18n.t('workflow')}
-              </Text>
+              <Text style={styles.featureTitle}>Your Workflow, Amplified</Text>
               <Text style={styles.featureText}>
-                {i18n.t('importData')}
+                Import data and deliver impactful presentations with ease.
               </Text>
               <TouchableOpacity
                 style={[styles.button, { marginTop: SPACING, backgroundColor: "#F59E0B" }]}
                 onPress={() => navigation.navigate("Intro", { isDarkTheme })}
               >
-                <Text style={styles.buttonText}>
-                  {i18n.t('learnMore')}
-                </Text>
+                <Text style={styles.buttonText}>Learn More</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -509,6 +412,7 @@ const HomeScreen = ({ navigation, isDarkTheme, fontSize, username }) => {
   );
 };
 
+// Feedback Screen
 const FeedbackScreen = ({ isDarkTheme, fontSize }) => {
   const styles = getDynamicStyles(isDarkTheme, fontSize);
   const [rating, setRating] = useState(0);
@@ -540,9 +444,7 @@ const FeedbackScreen = ({ isDarkTheme, fontSize }) => {
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container}>
         <Animated.View style={{ opacity: fadeAnim }}>
-          <Text style={[styles.title, { marginTop: 100, marginBottom: 30 }]}>
-            {i18n.t('shapeFuture')}
-          </Text>
+          <Text style={[styles.title, { marginTop: 100, marginBottom: 30 }]}>Shape Our Future</Text>
           <View style={styles.card}>
             <View style={{ flexDirection: "row", justifyContent: "center", marginVertical: SPACING }}>
               {[1, 2, 3, 4, 5].map((star) => (
@@ -558,7 +460,7 @@ const FeedbackScreen = ({ isDarkTheme, fontSize }) => {
             </View>
             <TextInput
               style={styles.input}
-              placeholder={i18n.t('insights')}
+              placeholder="Your Insights"
               placeholderTextColor={isDarkTheme ? "#A3BFFA" : "#6B7280"}
               value={feedback}
               onChangeText={setFeedback}
@@ -566,7 +468,7 @@ const FeedbackScreen = ({ isDarkTheme, fontSize }) => {
             />
             <TextInput
               style={styles.input}
-              placeholder={i18n.t('suggestions')}
+              placeholder="Suggestions?"
               placeholderTextColor={isDarkTheme ? "#A3BFFA" : "#6B7280"}
               value={suggestions}
               onChangeText={setSuggestions}
@@ -577,9 +479,7 @@ const FeedbackScreen = ({ isDarkTheme, fontSize }) => {
               onPress={sendFeedback}
               disabled={!rating || !feedback}
             >
-              <Text style={styles.buttonText}>
-                {i18n.t('submit')}
-              </Text>
+              <Text style={styles.buttonText}>Submit</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -588,11 +488,10 @@ const FeedbackScreen = ({ isDarkTheme, fontSize }) => {
   );
 };
 
+// Settings Screen
 const SettingsScreen = ({ toggleTheme, isDarkTheme, fontSize, setFontSize, resetSettings }) => {
   const styles = getDynamicStyles(isDarkTheme, fontSize);
   const [fadeAnim] = useState(new Animated.Value(0));
-  const [selectedLanguage, setSelectedLanguage] = useState("English");
-  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }).start();
@@ -607,26 +506,13 @@ const SettingsScreen = ({ toggleTheme, isDarkTheme, fontSize, setFontSize, reset
     setFontSize(value);
   };
 
-  const languages = ["English", "Gujarati", "Hindi"];
-
-  const handleLanguageSelect = (language) => {
-    setSelectedLanguage(language);
-    setShowDropdown(false);
-    const locale = language === "English" ? "en" : language === "Gujarati" ? "gu" : "hi";
-    i18n.locale = locale;
-  };
-
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={[styles.title, { marginTop: 100, marginBottom: 30 }]}>
-          {i18n.t('appearance')}
-        </Text>
+        <Text style={[styles.title, { marginTop: 100, marginBottom: 30 }]}>Appearance</Text>
         <View style={styles.card}>
           <Animated.View style={{ opacity: fadeAnim }}>
-            <Text style={styles.featureTitle}>
-              {i18n.t('appearance')}
-            </Text>
+            <Text style={styles.featureTitle}>Appearance</Text>
             <View style={styles.radioContainer}>
               <TouchableOpacity style={styles.radioButton} onPress={() => handleThemeChange("light")}>
                 <View
@@ -638,9 +524,7 @@ const SettingsScreen = ({ toggleTheme, isDarkTheme, fontSize, setFontSize, reset
                     },
                   ]}
                 />
-                <Text style={[styles.radioText, { color: isDarkTheme ? "#CBD5E1" : "#4B5563" }]}>
-                  {i18n.t('light')}
-                </Text>
+                <Text style={[styles.radioText, { color: isDarkTheme ? "#CBD5E1" : "#4B5563" }]}>Light</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.radioButton} onPress={() => handleThemeChange("dark")}>
                 <View
@@ -652,18 +536,13 @@ const SettingsScreen = ({ toggleTheme, isDarkTheme, fontSize, setFontSize, reset
                     },
                   ]}
                 />
-                <Text style={[styles.radioText, { color: isDarkTheme ? "#CBD5E1" : "#4B5563" }]}>
-                  {i18n.t('dark')}
-                </Text>
+                <Text style={[styles.radioText, { color: isDarkTheme ? "#CBD5E1" : "#4B5563" }]}>Dark</Text>
               </TouchableOpacity>
             </View>
-
-            <Text style={[styles.featureTitle, { marginTop: SPACING }]}>
-              {i18n.t('fontSize')}
-            </Text>
+            <Text style={[styles.featureTitle, { marginTop: SPACING }]}>Font Size</Text>
             <View style={styles.settingRow}>
               <Text style={[styles.radioText, { color: isDarkTheme ? "#CBD5E1" : "#4B5563" }]}>
-                {fontSize === 0 ? i18n.t('small') : i18n.t('large')}
+                {fontSize === 0 ? "Small" : "Large"}
               </Text>
               <Slider
                 style={styles.slider}
@@ -677,72 +556,8 @@ const SettingsScreen = ({ toggleTheme, isDarkTheme, fontSize, setFontSize, reset
                 thumbTintColor={isDarkTheme ? "#5CE1E6" : "#2A4D9C"}
               />
             </View>
-
-            <Text style={[styles.featureTitle, { marginTop: SPACING }]}>
-              {i18n.t('language')}
-            </Text>
-            <View style={styles.settingRow}>
-              <TouchableOpacity
-                style={{
-                  width: "100%",
-                  backgroundColor: isDarkTheme ? "#2A2F42" : "#FFFFFF",
-                  padding: SPACING - 2,
-                  borderRadius: 10,
-                  borderWidth: 1,
-                  borderColor: isDarkTheme ? "#3B82F6" : "#D1D5DB",
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-                onPress={() => setShowDropdown(!showDropdown)}
-              >
-                <Text style={[styles.radioText, { color: isDarkTheme ? "#CBD5E1" : "#4B5563" }]}>
-                  {selectedLanguage}
-                </Text>
-                <Ionicons
-                  name={showDropdown ? "chevron-up" : "chevron-down"}
-                  size={20}
-                  color={isDarkTheme ? "#CBD5E1" : "#4B5563"}
-                />
-              </TouchableOpacity>
-            </View>
-
-            {showDropdown && (
-              <View
-                style={{
-                  width: "100%",
-                  backgroundColor: isDarkTheme ? "#2A2F42" : "#FFFFFF",
-                  borderRadius: 10,
-                  borderWidth: 1,
-                  borderColor: isDarkTheme ? "#3B82F6" : "#D1D5DB",
-                  marginTop: 5,
-                  position: "absolute",
-                  top: 340,
-                  zIndex: 1,
-                }}
-              >
-                {languages.map((language) => (
-                  <TouchableOpacity
-                    key={language}
-                    style={{
-                      padding: SPACING - 2,
-                      borderBottomWidth: language === languages[languages.length - 1] ? 0 : 1,
-                      borderBottomColor: isDarkTheme ? "#3B82F6" : "#D1D5DB",
-                    }}
-                    onPress={() => handleLanguageSelect(language)}
-                  >
-                    <Text style={[styles.radioText, { color: isDarkTheme ? "#CBD5E1" : "#4B5563" }]}>
-                      {language}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-
             <TouchableOpacity style={styles.resetButton} onPress={resetSettings}>
-              <Text style={styles.buttonText}>
-                {i18n.t('reset')}
-              </Text>
+              <Text style={styles.buttonText}>Reset to Default</Text>
             </TouchableOpacity>
           </Animated.View>
         </View>
@@ -751,20 +566,19 @@ const SettingsScreen = ({ toggleTheme, isDarkTheme, fontSize, setFontSize, reset
   );
 };
 
+// FAQs Screen
 const FAQsScreen = ({ isDarkTheme, fontSize }) => {
   const styles = getDynamicStyles(isDarkTheme, fontSize);
   const faqs = [
-    { question: i18n.t('faq1q'), answer: i18n.t('faq1a') },
-    { question: i18n.t('faq2q'), answer: i18n.t('faq2a') },
-    { question: i18n.t('faq3q'), answer: i18n.t('faq3a') },
+    { question: "How do I begin?", answer: "Import your data, style it, and export." },
+    { question: "Appearance options?", answer: "Go to Settings." },
+    { question: "How to connect?", answer: "Use the Feedback screen." },
   ];
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={[styles.title, { marginTop: 100, marginBottom: 30 }]}>
-          {i18n.t('faq')}
-        </Text>
+        <Text style={[styles.title, { marginTop: 100, marginBottom: 30 }]}>Questionarie</Text>
         {faqs.map((faq, index) => (
           <View key={index} style={styles.card}>
             <Text style={styles.featureTitle}>{faq.question}</Text>
@@ -776,6 +590,7 @@ const FAQsScreen = ({ isDarkTheme, fontSize }) => {
   );
 };
 
+// Tab Navigator
 const TabNavigator = ({ navigation, toggleTheme, isDarkTheme, fontSize, setFontSize, resetSettings, username }) => {
   return (
     <Tab.Navigator
@@ -856,6 +671,7 @@ const TabNavigator = ({ navigation, toggleTheme, isDarkTheme, fontSize, setFontS
   );
 };
 
+// Main App
 export default function App() {
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
@@ -877,7 +693,6 @@ export default function App() {
   const resetSettings = () => {
     setIsDarkTheme(false);
     setFontSize(0);
-    i18n.locale = "en";
   };
 
   return (
